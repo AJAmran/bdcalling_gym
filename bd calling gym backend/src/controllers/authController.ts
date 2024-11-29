@@ -1,9 +1,13 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import User from "../models/userModel";
 import bcrypt from "bcrypt";
 import { generateToken } from "../utils/jwtHelper";
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { fullName, email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -18,11 +22,15 @@ export const register = async (req: Request, res: Response) => {
       .status(201)
       .json({ success: true, user: { id: newUser._id, fullName, email } });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    next(error);
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
@@ -34,6 +42,6 @@ export const login = async (req: Request, res: Response) => {
     const token = generateToken({ id: user._id, role: user.role });
     res.status(200).json({ success: true, token });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    next(error);
   }
 };

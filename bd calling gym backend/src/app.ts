@@ -25,11 +25,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/users", userRoutes);
 
-// Error handling
-app.use((err: any, req: any, res: any, next: any) => {
-  res.status(err.status || 500).json({ success: false, message: err.message });
-});
-
 // Global Error Handler
 app.use(errorMiddleware);
 

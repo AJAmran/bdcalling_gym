@@ -1,25 +1,27 @@
-import { Router } from "express";
-import { createClass, bookClass, getAllClasses, getClassById, updateClass, deleteClass } from "../controllers/classController";
-import { authMiddleware } from "../middlewares/authMiddleware";
+import express from "express";
+import {
+  createClass,
+  getAllClasses,
+  updateClass,
+  deleteClass,
+  enrollInClass,
+} from "../controllers/classController";
 import { roleMiddleware } from "../middlewares/roleMiddleware";
+import authenticateUser from "../middlewares/authMiddleware";
 
-const router = Router();
+const router = express.Router();
 
-router.post("/", authMiddleware, roleMiddleware(["admin"]), createClass);
+// Routes
+router.post("/", authenticateUser, roleMiddleware(["admin"]), createClass);
 router.get(
   "/",
-  authMiddleware,
+  authenticateUser,
   roleMiddleware(["admin", "trainer"]),
   getAllClasses
 );
-router.get(
-  "/:id",
-  authMiddleware,
-  roleMiddleware(["admin", "trainer"]),
-  getClassById
-);
-router.put("/:id", authMiddleware, roleMiddleware(["admin"]), updateClass);
-router.delete("/:id", authMiddleware, roleMiddleware(["admin"]), deleteClass);
-router.post("/book", authMiddleware, bookClass);
+// Route to enroll in a class
+router.patch("/:classId/enroll", enrollInClass);
+router.put("/:id", authenticateUser, roleMiddleware(["admin"]), updateClass);
+router.delete("/:id", authenticateUser, roleMiddleware(["admin"]), deleteClass);
 
 export default router;

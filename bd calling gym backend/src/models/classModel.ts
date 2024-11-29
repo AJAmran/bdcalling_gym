@@ -13,7 +13,7 @@ const classSchema = new Schema<ClassType>(
   {
     date: { type: String, required: true },
     time: { type: String, required: true },
-    duration: { type: Number, default: 2 }, // 2 hours per class
+    duration: { type: Number, default: 2 },
     trainer: { type: Schema.Types.ObjectId, ref: "User", required: true },
     trainees: [{ type: Schema.Types.ObjectId, ref: "User" }],
     maxTrainees: { type: Number, default: 10 },
