@@ -1,6 +1,6 @@
 import { model, Schema } from "mongoose";
 
-type UserType = {
+export type UserType = {
   fullName: string;
   email: string;
   password: string;
