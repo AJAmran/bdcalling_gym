@@ -14,29 +14,26 @@ export const register = async (req: Request, res: Response) => {
       password: hashedPassword,
       role: "trainee",
     });
-    const { _id } = newUser;
-    res.status(201).json({
-      success: true,
-      user: {
-        _id,
-        fullName,
-        email,
-      },
-    });
+    res
+      .status(201)
+      .json({ success: true, user: { id: newUser._id, fullName, email } });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
 export const login = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    return res
-      .status(401)
-      .json({ success: false, message: "Invalid credentials" });
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials" });
+    }
+    const token = generateToken({ id: user._id, role: user.role });
+    res.status(200).json({ success: true, token });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
   }
-
-  const token = generateToken({ id: user._id, role: user.role });
-  res.status(200).json({ success: true, token });
 };
