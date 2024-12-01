@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "@/redux/slices/authSlice";
 import { RootState } from "@/redux/store";
@@ -11,18 +11,29 @@ import { AppDispatch } from "@/redux/store";
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const { loading, error, user } = useSelector(
+    (state: RootState) => state.auth
+  );
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === "admin") {
+        router.push("/admin-dashboard");
+      } else if (user.role === "editor") {
+        router.push("/editor-dashboard");
+      } else {
+        router.push("/user-dashboard");
+      }
+    }
+  }, [user, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(loginUser({ email, password }))
       .unwrap()
-      .then(() => {
-        router.push("/");
-      })
       .catch((err) => {
         console.error("Login failed:", err);
       });

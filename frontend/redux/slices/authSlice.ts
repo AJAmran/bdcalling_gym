@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 interface AuthState {
-  user: null | { id: string; fullName: string; email: string };
+  user: null | { id: string; fullName: string; email: string; role: string };
   accessToken: string | null;
   loading: boolean;
   error: string | null;
@@ -29,24 +29,14 @@ const clearToken = () => {
 export const registerTrainee = createAsyncThunk(
   "auth/register",
   async (
-    {
-      fullName,
-      email,
-      password,
-    }: { fullName: string; email: string; password: string },
+    { fullName, email, password }: { fullName: string; email: string; password: string },
     { rejectWithValue }
   ) => {
     try {
-      const response = await axios.post("/api/auth/register", {
-        fullName,
-        email,
-        password,
-      });
+      const response = await axios.post("/api/auth/register", { fullName, email, password });
       return response.data; // Assumes { user, accessToken } is returned
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Registration failed"
-      );
+      return rejectWithValue(error.response?.data?.message || "Registration failed");
     }
   }
 );
@@ -122,7 +112,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
+        state.user = { ...action.payload.user, role: action.payload.user.role }; // Store role and userId
         state.accessToken = action.payload.accessToken;
         saveToken(action.payload.accessToken);
       })
