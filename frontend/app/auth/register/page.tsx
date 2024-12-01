@@ -1,13 +1,15 @@
 "use client";
+
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { registerTrainee } from "@/redux/slices/authSlice";
 import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { AppDispatch } from "@/redux/store"; // Import AppDispatch
 
 const Register = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>(); // Correctly typed dispatch
   const router = useRouter();
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
