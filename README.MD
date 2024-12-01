@@ -8,8 +8,8 @@ The Gym Management System is a robust platform that helps administrators, traine
 ## **Relational Diagram**
 A relational diagram represents the relationship between users, classes, and enrollments in the system.
 
-![Relational Diagram](https://link-to-your-relational-diagram-image)  
-[View Diagram](https://link-to-diagram-resource)
+![Relational Diagram](https://res.cloudinary.com/dhukcjdmi/image/upload/v1733051652/er_diagram_yrpt0f.png)  
+
 
 ---
 
@@ -79,15 +79,15 @@ const classSchema = new mongoose.Schema({
 ---
 
 ## **Admin Credentials**
-- **Email:** `admin@gym.com`
-- **Password:** `admin123`
+- **Email:** `amran@example.com`
+- **Password:** `password123`
 
 ---
 
 ## **Instructions to Run Locally**
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/your-repo-name.git
+   git clone https://github.com/AJAmran/bdcalling_gym.git
    cd your-repo-name
    ```
 
@@ -115,5 +115,5 @@ const classSchema = new mongoose.Schema({
 ---
 
 ## **Live Hosting Link**
-[Live Demo](https://your-live-hosting-link.com)
+[Live Demo](https://gym-backend-lake.vercel.app/)
 
