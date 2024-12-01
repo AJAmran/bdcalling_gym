@@ -4,10 +4,10 @@ import {
   getAllClasses,
   updateClass,
   deleteClass,
-  enrollInClass,
 } from "../controllers/classController";
 import { roleMiddleware } from "../middlewares/roleMiddleware";
 import authenticateUser from "../middlewares/authMiddleware";
+import { enrollInClass } from "../controllers/traineeController";
 
 const router = express.Router();
 
@@ -20,7 +20,12 @@ router.get(
   getAllClasses
 );
 // Route to enroll in a class
-router.patch("/:classId/enroll", enrollInClass);
+router.patch(
+  "/enroll/:id",
+  authenticateUser,
+  roleMiddleware(["trainee"]),
+  enrollInClass
+);
 router.put("/:id", authenticateUser, roleMiddleware(["admin"]), updateClass);
 router.delete("/:id", authenticateUser, roleMiddleware(["admin"]), deleteClass);
 
