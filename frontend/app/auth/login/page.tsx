@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { loginUser } from "@/redux/slices/authSlice";
+import { loginUser, setToken } from "@/redux/slices/authSlice";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import Link from "next/link";
@@ -20,11 +20,9 @@ const LoginPage: React.FC = () => {
     const result = await dispatch(loginUser({ email, password }));
 
     if (loginUser.fulfilled.match(result)) {
-      const { token, user } = result.payload;
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      dispatch(setToken(result.payload));
 
-      const userRole = user?.role;
+      const userRole = JSON.parse(localStorage.getItem("user")!)?.role;
       if (userRole === "admin") {
         router.push("/dashboard/admin");
       } else if (userRole === "user") {

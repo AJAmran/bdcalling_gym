@@ -3,11 +3,9 @@
 import React, { useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import { FaChartBar, FaUsers, FaCog } from "react-icons/fa";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { checkUserRole } from "@/redux/slices/authSlice";
 import { useRouter } from "next/navigation";
-import Card from "@/components/card";
 
 const DashboardPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -15,18 +13,14 @@ const DashboardPage: React.FC = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const authToken = token || localStorage.getItem("token");
+    const authToken = token || localStorage.getItem("authToken");
 
-    // If no token, redirect to login
     if (!authToken) {
       router.push("/auth/login");
-    } else {
-      // If the user is not loaded yet, try to dispatch action to fetch user role
-      if (!user && !loading) {
-        dispatch(checkUserRole());
-      }
+    } else if (!user) {
+      dispatch(checkUserRole());
     }
-  }, [user, token, dispatch, router, loading]);
+  }, [user, token, dispatch, router]);
 
   if (loading)
     return (
@@ -42,26 +36,7 @@ const DashboardPage: React.FC = () => {
       <Sidebar />
       <div className="ml-64 p-6 w-full">
         <Header />
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card
-            title="Total Users"
-            content="1,500"
-            icon={<FaUsers />}
-            backgroundColor="bg-blue-500"
-          />
-          <Card
-            title="New Orders"
-            content="245"
-            icon={<FaChartBar />}
-            backgroundColor="bg-green-500"
-          />
-          <Card
-            title="Settings"
-            content="Manage your settings here"
-            icon={<FaCog />}
-            backgroundColor="bg-yellow-500"
-          />
-        </div>
+        <h1>Welcome to the Dashboard!</h1>
       </div>
     </div>
   );

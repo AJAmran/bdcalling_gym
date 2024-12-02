@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
-// Type for state and actions
 interface AuthState {
   token: string | null;
   user: { id: string; role: string } | null;
@@ -10,7 +9,6 @@ interface AuthState {
   error: string | null;
 }
 
-// Initial state
 const initialState: AuthState = {
   token: null,
   user: null,
@@ -18,10 +16,25 @@ const initialState: AuthState = {
   error: null,
 };
 
-// API URLs
+// Initialize from localStorage safely in the browser
+if (typeof window !== "undefined") {
+  const storedToken = localStorage.getItem("authToken");
+  const storedUser = localStorage.getItem("user");
+
+  if (storedToken) initialState.token = storedToken;
+
+  if (storedUser && storedUser !== "undefined") {
+    try {
+      initialState.user = JSON.parse(storedUser);
+    } catch (error) {
+      console.error("Error parsing stored user JSON:", error);
+      localStorage.removeItem("user"); // Clean up invalid data
+    }
+  }
+}
+
 const API_URL = "https://gym-backend-lake.vercel.app/api/auth";
 
-// Login Action
 export const loginUser = createAsyncThunk(
   "auth/login",
   async (
@@ -37,7 +50,6 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-// Register Action
 export const registerUser = createAsyncThunk(
   "auth/register",
   async (
@@ -55,7 +67,6 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-// Slice
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -67,16 +78,25 @@ const authSlice = createSlice({
       localStorage.removeItem("user");
     },
     setToken: (state, action: PayloadAction<string>) => {
-      const token = action.payload;
-      const decodedUser = jwtDecode<{ id: string; role: string }>(token);
-      state.token = token;
-      state.user = decodedUser;
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("user", JSON.stringify(decodedUser));
+      try {
+        const token = action.payload;
+        const decodedUser = jwtDecode<{ id: string; role: string }>(token);
+        state.token = token;
+        state.user = decodedUser;
+        localStorage.setItem("authToken", token);
+        localStorage.setItem("user", JSON.stringify(decodedUser));
+      } catch (error) {
+        console.error("Invalid token:", error);
+        state.token = null;
+        state.user = null;
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+      }
     },
     checkUserRole: (state) => {
-      if (state.token) {
-        const decoded = jwtDecode<{ id: string; role: string }>(state.token);
+      const token = state.token || localStorage.getItem("authToken");
+      if (token) {
+        const decoded = jwtDecode<{ id: string; role: string }>(token);
         state.user = decoded;
       }
     },
