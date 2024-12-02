@@ -1,103 +1,85 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useState } from "react";
 import { loginUser } from "@/redux/slices/authSlice";
-import { RootState } from "@/redux/store";
 import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import Link from "next/link";
-import { AppDispatch } from "@/redux/store";
+import { toast } from "react-hot-toast";
 
-const Login = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
-  const { loading, error, user } = useSelector(
-    (state: RootState) => state.auth
-  );
-
+const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const dispatch = useAppDispatch();
+  const { loading, error } = useAppSelector((state) => state.auth);
+  const router = useRouter();
 
-  useEffect(() => {
-    if (user) {
-      if (user.role === "admin") {
-        router.push("/admin-dashboard");
-      } else if (user.role === "editor") {
-        router.push("/editor-dashboard");
-      } else {
-        router.push("/user-dashboard");
-      }
-    }
-  }, [user, router]);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(loginUser({ email, password }))
-      .unwrap()
-      .catch((err) => {
-        console.error("Login failed:", err);
-      });
+
+    const result = await dispatch(loginUser({ email, password }));
+
+    if (loginUser.fulfilled.match(result)) {
+      const { token, user } = result.payload;
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      const userRole = user?.role;
+      if (userRole === "admin") {
+        router.push("/dashboard/admin");
+      } else if (userRole === "user") {
+        router.push("/dashboard/user");
+      } else {
+        router.push("/dashboard");
+      }
+    } else {
+      toast.error(result.error?.message || "Login failed");
+    }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold text-center mb-6 text-gray-600">
-          Login to Your Account
-        </h2>
-        {error && <div className="text-red-500 text-center mb-4">{error}</div>}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-2 mt-4 bg-blue-500 text-white rounded-md shadow-sm hover:bg-blue-600 focus:outline-none ${
-              loading ? "opacity-50" : ""
-            }`}
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-        <p className="text-center mt-4 text-gray-500">
-          Don’t have an account?{" "}
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-md p-6 bg-white shadow-md rounded"
+      >
+        <h2 className="text-2xl font-semibold text-center mb-6">Login</h2>
+        {error && <p className="text-red-500 text-center">{error}</p>}
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="w-full p-2 mb-4 border rounded"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="w-full p-2 mb-4 border rounded"
+        />
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+        >
+          {loading ? "Logging in..." : "Login"}
+        </button>
+
+        <p className="text-center text-sm mt-4">
+          New user?{" "}
           <Link href="/auth/register" className="text-blue-500 hover:underline">
-            Register
+            Register here
           </Link>
         </p>
-      </div>
+      </form>
     </div>
   );
 };
 
-export default Login;
+export default LoginPage;

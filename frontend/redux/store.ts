@@ -1,14 +1,15 @@
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "@/redux/slices/authSlice";
+import authReducer from "./slices/authSlice";
 
-export const store = configureStore({
+const store = configureStore({
   reducer: {
     auth: authReducer,
-    // trainers: trainerReducer,
-    // classes: classReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({ serializableCheck: false }), // Disable serializableCheck for JWT tokens
 });
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
-export type AppStore = typeof store;
+
+export default store;

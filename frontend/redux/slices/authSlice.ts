@@ -1,143 +1,117 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
+// Type for state and actions
 interface AuthState {
-  user: null | { id: string; fullName: string; email: string; role: string };
-  accessToken: string | null;
+  token: string | null;
+  user: { id: string; role: string } | null;
   loading: boolean;
   error: string | null;
 }
 
+// Initial state
 const initialState: AuthState = {
+  token: null,
   user: null,
-  accessToken: null,
   loading: false,
   error: null,
 };
 
-// Utility function to store token in cookies/local storage
-const saveToken = (token: string) => {
-  localStorage.setItem("accessToken", token); // Replace with cookies if needed
-};
+// API URLs
+const API_URL = "https://gym-backend-lake.vercel.app/api/auth";
 
-// Utility function to clear token
-const clearToken = () => {
-  localStorage.removeItem("accessToken"); // Replace with cookies if needed
-};
-
-// Register Trainee
-export const registerTrainee = createAsyncThunk(
-  "auth/register",
-  async (
-    { fullName, email, password }: { fullName: string; email: string; password: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await axios.post("/api/auth/register", { fullName, email, password });
-      return response.data; // Assumes { user, accessToken } is returned
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || "Registration failed");
-    }
-  }
-);
-
-// Login User
+// Login Action
 export const loginUser = createAsyncThunk(
   "auth/login",
   async (
-    { email, password }: { email: string; password: string },
+    credentials: { email: string; password: string },
     { rejectWithValue }
   ) => {
     try {
-      const response = await axios.post("/api/auth/login", { email, password });
-      return response.data; // Assumes { user, accessToken } is returned
+      const response = await axios.post(`${API_URL}/login`, credentials);
+      return response.data.token;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Login failed");
     }
   }
 );
 
-// Logout User
-export const logoutUser = createAsyncThunk(
-  "auth/logout",
-  async (_, { rejectWithValue }) => {
+// Register Action
+export const registerUser = createAsyncThunk(
+  "auth/register",
+  async (
+    userData: { fullName: string; email: string; password: string },
+    { rejectWithValue }
+  ) => {
     try {
-      await axios.post("/api/auth/logout"); // Optional: if backend has logout endpoint
-      return true;
+      await axios.post(`${API_URL}/register`, userData);
+      return "Registration successful";
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || "Logout failed");
+      return rejectWithValue(
+        error.response?.data?.message || "Registration failed"
+      );
     }
   }
 );
 
+// Slice
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    // Restore token from storage when the app loads
-    restoreToken(state) {
-      const token = localStorage.getItem("accessToken"); // Replace with cookies if needed
-      if (token) {
-        state.accessToken = token;
-      }
-    },
-    // Clear auth state manually (optional)
-    clearAuthState(state) {
+    logout: (state) => {
+      state.token = null;
       state.user = null;
-      state.accessToken = null;
-      state.error = null;
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("user");
+    },
+    setToken: (state, action: PayloadAction<string>) => {
+      const token = action.payload;
+      const decodedUser = jwtDecode<{ id: string; role: string }>(token);
+      state.token = token;
+      state.user = decodedUser;
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("user", JSON.stringify(decodedUser));
+    },
+    checkUserRole: (state) => {
+      if (state.token) {
+        const decoded = jwtDecode<{ id: string; role: string }>(state.token);
+        state.user = decoded;
+      }
     },
   },
   extraReducers: (builder) => {
     builder
-      // Register Trainee
-      .addCase(registerTrainee.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(registerTrainee.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload.user;
-        state.accessToken = action.payload.accessToken;
-        saveToken(action.payload.accessToken);
-      })
-      .addCase(registerTrainee.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // Login User
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
+      .addCase(loginUser.fulfilled, (state, action: PayloadAction<string>) => {
+        const token = action.payload;
+        const decodedUser = jwtDecode<{ id: string; role: string }>(token);
+        state.token = token;
+        state.user = decodedUser;
         state.loading = false;
-        state.user = { ...action.payload.user, role: action.payload.user.role }; // Store role and userId
-        state.accessToken = action.payload.accessToken;
-        saveToken(action.payload.accessToken);
       })
-      .addCase(loginUser.rejected, (state, action) => {
+      .addCase(loginUser.rejected, (state, action: PayloadAction<any>) => {
+        state.error = action.payload;
         state.loading = false;
-        state.error = action.payload as string;
       })
-      // Logout User
-      .addCase(logoutUser.pending, (state) => {
+      .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(logoutUser.fulfilled, (state) => {
+      .addCase(registerUser.fulfilled, (state) => {
         state.loading = false;
-        state.user = null;
-        state.accessToken = null;
-        clearToken();
+        state.error = null;
       })
-      .addCase(logoutUser.rejected, (state, action) => {
+      .addCase(registerUser.rejected, (state, action: PayloadAction<any>) => {
+        state.error = action.payload;
         state.loading = false;
-        state.error = action.payload as string;
       });
   },
 });
 
-export const { restoreToken, clearAuthState } = authSlice.actions;
-
+export const { logout, setToken, checkUserRole } = authSlice.actions;
 export default authSlice.reducer;
