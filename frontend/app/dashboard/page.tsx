@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useEffect } from "react";
-import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { checkUserRole } from "@/redux/slices/authSlice";
 import { useRouter } from "next/navigation";
@@ -33,11 +31,7 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="flex">
-      <Sidebar />
-      <div className="ml-64 p-6 w-full">
-        <Header />
-        <h1>Welcome to the Dashboard!</h1>
-      </div>
+      <h1>Welcome to the Dashboard!</h1>
     </div>
   );
 };
